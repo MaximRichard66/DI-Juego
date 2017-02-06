@@ -55,12 +55,6 @@ public class Persona {
 			
 			System.out.println("El resultado devuelto es: "+resultado);
 			
-			if(resultado==true){
-				
-				//Cambiamos la imagen de la silueta por el personaje seleccionado
-				
-			}
-			
 			return resultado;
 						
 		}

@@ -6,8 +6,10 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOError;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.channels.ShutdownChannelGroupException;
 import java.util.Scanner;
 
@@ -42,18 +44,13 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 	
 	private JMenuBar menu;	
 	
-	private JMenu juegoMenu;
-	
+	private JMenu menuJuego;
 	
 	private JMenuItem acercaDe;
 	
 	private JMenuItem reiniciar;
 	
 	private JMenuItem salir;
-	
-	/* Acerca de */
-	File informacionPdf;
-		
 	
 	//Persona que hay que adivinar
 	Persona personaAdivinar;
@@ -71,8 +68,6 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 	//Persona [] personas = new Personas [longitudArray];
 	int personajeAleatorio = generarPersonajeAleatorio();
 	
-	boolean comprobarReiniciar;
-	
 	JSplitPane splitPaneHorizontal;
 	
 	/* IMAGENES */
@@ -80,6 +75,11 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 	
 	/* PANELES DE LA APLICACION */
 	
+	/* Acerca de */
+	File informacionPdf;
+		
+	
+	/* PANEL PRINCIPAL */
 	//Panel principal 
 	JPanel panelPrincipal;
 	
@@ -147,16 +147,23 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 	
 	int numColumna=0;
 	String caracteristica="";
+	
+	
+	
+	/*RANKING JUGADORES*/
+	int longitudNombreJugador;
+	JTextField nombreJugador;
 
+	
 	
 	public void jMenuBar(){
 		
 		menu = new JMenuBar();
 		
-		juegoMenu = new JMenu("Juego");
+		menuJuego = new JMenu("Juego");
 		
-		juegoMenu.addActionListener(this);
-	
+		menuJuego.addActionListener(this);
+		
 		acercaDe = new JMenuItem("Acerca de...");
 		
 		acercaDe.addActionListener(this);
@@ -175,14 +182,13 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 		
 		//Añadimos los submenus al JMenuBar
 		
+		menu.add(menuJuego);
 		
-		menu.add(juegoMenu);
+		menuJuego.add(acercaDe);
 		
-		juegoMenu.add(acercaDe);
+		menuJuego.add(reiniciar);
 		
-		juegoMenu.add(reiniciar);
-		
-		juegoMenu.add(salir);
+		menuJuego.add(salir);
 		
 		
 	}
@@ -345,13 +351,20 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 		etiquetaPersonaje =  new JLabel();
 		
 		etiquetaPersonaje.setIcon(imagenPersonaje);
-		
+
 		panelAtributos.add(etiquetaPersonaje);
 		
 		//instanciamos la lista
 		listaAtributos = new JList(atributos);
+		//Tipo de  seleccion que podemos realizar en este caso solo podemos elegir un atributo 
+		listaAtributos.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION); 
+		
 		botonAtributo = new JButton("Seleccionar Atributo");
+		
 		botonAtributo.addActionListener(this);
+		
+	
+		
 		
 		//Centrar los componentes 
 		panelAtributos.setLayout(new BoxLayout(panelAtributos,BoxLayout.PAGE_AXIS));
@@ -359,11 +372,17 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 		listaAtributos.setAlignmentX(Component.CENTER_ALIGNMENT);
 		botonAtributo.setAlignmentX(Component.CENTER_ALIGNMENT);
 		
+	
+		
+		//Puntuacion 
+		
 		
 		//Añadimos los componentes al JPanel Atributos
 		panelAtributos.add(listaAtributos);
 		panelAtributos.add(botonAtributo);
 	
+
+		
 		add(panelAtributos);
 		
 		
@@ -377,22 +396,21 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 	}	
 	
 	/* CONSTRUCTOR PRINCIPAL DEL JUEGO Y CARACTERISTICAS DEL JFRAME  */
-	public QuienEsQuienEstructura(){
+	public QuienEsQuienEstructura() throws IOException{
 
-		//Llamadas metodos Creacion Juego
-		jMenuBar();
-		crearPanelPrincipal();
-		crearPanelAtributos();
-		crearSplitPane(panelPrincipal, panelAtributos);	
+			jMenuBar();
+			crearPanelPrincipal();
+			crearPanelAtributos();
+			crearSplitPane(panelPrincipal, panelAtributos);
+			
+			//Propiedades del JFrame
+			setTitle("¿Quien es Quien?");
+			setVisible(true);
+			setResizable(false);
+			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			Dimension dim=super.getToolkit().getScreenSize();
+	        super.setSize(dim);
 		
-		//Propiedades del JFrame
-		setTitle("¿Quien es Quien?");
-		setVisible(true);
-		setResizable(false);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		Dimension dim=super.getToolkit().getScreenSize();
-        super.setSize(dim);
-	
 	}
 
 
@@ -447,7 +465,6 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 		else if ((e.getSource()==botonDenise)){
 			
 			numBoton = 4;
-			comprobarBoton(resultado,numBoton,arrayPersonas);
 			resultado = arrayPersonas[numBoton].compruebaPersona(numBoton, personajeAleatorio);
 			comprobarBoton(resultado,numBoton,arrayPersonas);
 			
@@ -557,28 +574,10 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 			
 		}
 		
-		else if (e.getSource()==acercaDe) {
+		
+		else if(e.getSource()==reiniciar){
 			
-			try {
-			     informacionPdf = new File ("info.pdf");
-			     Desktop.getDesktop().open(informacionPdf);
-			}catch (IOException ex) {
-			     ex.printStackTrace();
-			}
-			
-			try {
-			    Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + "info.pdf");
-			} catch (IOException error) {
-			                error.printStackTrace();
-			}
-			
-			
-		}
-		else if (e.getSource()==reiniciar) {
-			
-			//Llamadas metodos Creacion Juego
-			QuienEsQuienEstructura reiniciarJuego = new QuienEsQuienEstructura();
-			
+			reiniciarPartida(arrayBotones);
 		}
 		
 		else if(e.getSource()==salir){
@@ -591,13 +590,20 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 			
 			int num = listaAtributos.getSelectedIndex();
 			conversor(num);
-			
 			System.out.println("numComuna: "+numColumna);
 			System.out.println("caracteristica: "+caracteristica);
-			
 			caracteristicasFisicas(numColumna, caracteristica, arrayPersonas, personajeAleatorio);
 			
+		}
+		
+		else if (e.getSource()==acercaDe) {
 			
+			try {
+			     Runtime.getRuntime().exec("hh.exe C:/Users/dam2/Desktop/Nueva carpeta (2)/Guess Who/acercaDe.chm");
+			}
+			catch (Exception ex) {
+			     ex.printStackTrace();
+			}
 		}
 		
 		else{
@@ -659,7 +665,7 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 	}
 	
 	
-	public boolean comprobarBoton(boolean resultado, int numBoton, Persona array[]){
+	public void comprobarBoton(boolean resultado, int numBoton, Persona array[]){
 		
 		ImageIcon logo = new ImageIcon("img/logo.jpg");
 		
@@ -684,8 +690,8 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 			panelDatos.add(texto,BorderLayout.PAGE_END);
 		
 			if(JOptionPane.showConfirmDialog(this,panelDatos,"Enhorabuena!", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE)==JOptionPane.YES_OPTION){
-			 	
-					QuienEsQuienEstructura reset = new QuienEsQuienEstructura();
+				
+				reiniciarPartida(arrayBotones);
 				
 				
 			}
@@ -695,7 +701,6 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 				System.exit(0);
 				
 			}
-		
 			
 		}
 		
@@ -705,7 +710,6 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 			
 			if(resultado==false){
 				
-				//botonAdam.setIcon(new ImageIcon("img/cardback.png"));
 				arrayBotones[numBoton].setEnabled(false);
 				
 			}
@@ -713,14 +717,12 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 			
 		}
 		
-		return comprobarReiniciar;
-		
 		
 	}
 	
 	//Método seleccion de características físicas
 	
-	public void caracteristicasFisicas(int numColumna, String caracteristica, Persona array[], int numSeleccionado){
+			public void caracteristicasFisicas(int numColumna, String caracteristica, Persona array[], int numSeleccionado){
 				
 				Persona personaSeleccionada = array[numSeleccionado];
 				
@@ -988,17 +990,14 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 								
 						}
 						
-					}
-					
-	
-						
+					}		
 			}
 							
 			
 			
-	//Metodo que convierte los atributos seleccionados para utilizar el método caracteristicas Fisicas
+			//Metodo que convierte los atributos seleccionados para utilizar el método caracteristicas Fisicas
 			
-	public void conversor(int numCaracteristica){
+				public void conversor(int numCaracteristica){
 					
 					switch(numCaracteristica){
 					
@@ -1035,20 +1034,22 @@ public class QuienEsQuienEstructura  extends JFrame implements ListSelectionList
 					}
 					
 					
-				
-					
 				}
 				
-
-
-
-}
+				//Metodo que reinicia la partida 
 				
-		
-				
-
-	
-	
+				public void reiniciarPartida (JButton[] arrayBotones){
+					
+					for(int i=0;i<arrayBotones.length;i++){
+						
+						arrayBotones[i].setEnabled(true);	
+							
+					}
+					
+					personajeAleatorio = generarPersonajeAleatorio();	
+					
+				}
+		}
 
 
 	
